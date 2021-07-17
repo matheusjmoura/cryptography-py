@@ -6,7 +6,11 @@ import time
 import threading
 import select
 import traceback
+from cryptography.fernet import Fernet
 
+#Key randomly generated (Fernet.generate_key()) and kept fixed
+key = 'bTDBiUsmjTu6j2uy7WSy9BZ9W038US23LM244kyDjkg='
+fernet = Fernet(key)
 
 class Server(threading.Thread):
     def initialise(self, receive):
@@ -22,11 +26,11 @@ class Server(threading.Thread):
                     s = item.recv(1024)
                     if s != '':
                         chunk = s
-                        print(chunk.decode() + '\n>>')
+                        #Decrypt and display the message, converting it into a string
+                        print(fernet.decrypt(chunk).decode() + '\n>>')
                 except:
                     traceback.print_exc(file=sys.stdout)
                     break
-
 
 class Client(threading.Thread):
     def connect(self, host, port):
@@ -34,7 +38,7 @@ class Client(threading.Thread):
 
     def client(self, host, port, msg):
         sent = self.sock.send(msg)
-        # print "Sent\n"
+        #Sent
 
     def run(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,18 +63,18 @@ class Client(threading.Thread):
         print("Starting service")
         srv.start()
         while 1:
-            # print "Waiting for message\n"
-            msg = input('>>')
+            #Waiting for message
+            msg = input('>>\n')
             if msg == 'exit':
                 break
             if msg == '':
                 continue
-            # print "Sending\n"
+            #Sending
             msg = user_name + ': ' + msg
-            data = msg.encode()
+            #Convert to byte and encrypt
+            data = fernet.encrypt(msg.encode())
             self.client(host, port, data)
         return (1)
-
 
 if __name__ == '__main__':
     print("Starting client")
